@@ -1,4 +1,0 @@
-spyne
-lxml
-redis
-loguru

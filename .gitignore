@@ -138,68 +138,45 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
-
-# --- Ambientes virtuais ---
-env/
-env310/
-venv/
-.venv/
-
-# Arquivos de configuração pessoais
-*.env
-*.env.local
-
-# Cache do Python
+# Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.pyd
-*.pdb
-*.pyp
-*.pyr
-
-# Cache do pip
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Arquivos temporários
-*.log
-*.tmp
-*.swp
-*.swo
-
-# Diretórios temporários
-temp/
-tmp/
-
-# Build e distribuição
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
 build/
+develop-eggs/
 dist/
-*.egg-info/
+downloads/
+eggs/
 .eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# VSCode
-.vscode/
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/static
 
 # PyCharm
 .idea/
 
-# Docker
-*.pid
-docker-data/
-docker-compose.override.yml
+# VS Code
+.vscode/
 
-# Sistema operacional
-.DS_Store
-Thumbs.db
-
-# Arquivos de testes
-coverage/
-htmlcov/
-.tox/
-.nox/
+# pytest
 .pytest_cache/
-
-# Arquivos gerados automaticamente
-*.sqlite3
