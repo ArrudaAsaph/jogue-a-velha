@@ -1,0 +1,8 @@
+django
+djangorestframework
+djangorestframework-jwt
+psycopg2-binary
+requests
+drf-yasg
+django-cors-headers
+pymongo
