@@ -1,11 +1,4 @@
-"""
-Utilitários e lógica do jogo da velha
-"""
-
-
 class TicTacToeGame:
-    """Classe para lógica do jogo da velha"""
-
     @staticmethod
     def check_winner(board):
         """

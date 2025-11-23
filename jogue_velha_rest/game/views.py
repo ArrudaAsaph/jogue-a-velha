@@ -1,13 +1,10 @@
-"""
-Views REST para o jogo da velha
-"""
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from .mongodb import mongodb
+from .room_manager import room_manager
 from .serializers import JoinRoomSerializer, MoveSerializer, RoomStateSerializer
 from .utils import TicTacToeGame
 
@@ -49,8 +46,8 @@ def join_room(request):
     room_id = serializer.validated_data['roomId']
     player_ip = serializer.validated_data.get('playerIp') or request.META.get('REMOTE_ADDR', 'unknown')
 
-    # Busca a sala no MongoDB
-    room = mongodb.rooms.find_one({"roomId": room_id})
+    # Busca a sala em memória
+    room = room_manager.find_one({"roomId": room_id})
 
     if not room:
         return Response(
@@ -66,7 +63,7 @@ def join_room(request):
         )
 
     # Atualiza a sala com o segundo jogador
-    mongodb.rooms.update_one(
+    room_manager.update_one(
         {"roomId": room_id},
         {
             "$set": {
@@ -129,8 +126,8 @@ def make_move(request):
     player = serializer.validated_data['player']
     position = serializer.validated_data['position']
 
-    # Busca a sala no MongoDB
-    room = mongodb.rooms.find_one({"roomId": room_id})
+    # Busca a sala em memória
+    room = room_manager.find_one({"roomId": room_id})
 
     if not room:
         return Response(
@@ -174,8 +171,8 @@ def make_move(request):
         new_status = 'playing'
         next_turn = TicTacToeGame.get_next_player(player)
 
-    # Atualiza no MongoDB
-    mongodb.rooms.update_one(
+    # Atualiza em memória
+    room_manager.update_one(
         {"roomId": room_id},
         {
             "$set": {
@@ -243,17 +240,14 @@ def get_room_state(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Busca a sala no MongoDB
-    room = mongodb.rooms.find_one({"roomId": room_id})
+    # Busca a sala em memória
+    room = room_manager.find_one({"roomId": room_id})
 
     if not room:
         return Response(
             {"error": "Sala não encontrada"},
             status=status.HTTP_404_NOT_FOUND
         )
-
-    # Remove o _id do MongoDB da resposta
-    room.pop('_id', None)
 
     return Response(room, status=status.HTTP_200_OK)
 
