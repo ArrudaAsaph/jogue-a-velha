@@ -4,13 +4,10 @@ import requests
 
 app = Flask(__name__)
 
-# Configurações dos serviços
 REST_API_URL = "http://rest-api:5000"
 SOAP_API_URL = "http://soap-api:8001"
 
-# -----------------------------
-# Rotas Gateway com HATEOAS
-# -----------------------------
+
 
 @app.route("/criar-sala", methods=["POST"])
 def criar_sala_gateway():
@@ -32,7 +29,8 @@ def criar_sala_gateway():
 
     try:
         resp = requests.post(SOAP_API_URL, data=soap_request, headers={"Content-Type": "text/xml"})
-        # Extraindo o RoomID do XML (simples regex)
+
+
         import re
         match = re.search(r"<tns:criarSalaResult>(.*?)</tns:criarSalaResult>", resp.text)
         room_id = match.group(1) if match else None
@@ -58,7 +56,8 @@ def entrar_sala(sala_id):
     try:
         resp = requests.post(f"{REST_API_URL}/salas/{sala_id}/entrar", json=payload)
         data = resp.json()
-        # Adicionando HATEOAS
+
+        #  HATEOAS
         data["_links"] = {
             "jogar": f"/salas/{sala_id}/jogar",
             "consultar_sala": f"/salas/{sala_id}"
@@ -74,7 +73,7 @@ def jogar(sala_id):
     try:
         resp = requests.post(f"{REST_API_URL}/salas/{sala_id}/jogar", json=payload)
         data = resp.json()
-        # Adicionando HATEOAS
+
         data["_links"] = {
             "consultar_sala": f"/salas/{sala_id}"
         }
@@ -88,7 +87,7 @@ def consultar_sala(sala_id):
     try:
         resp = requests.get(f"{REST_API_URL}/salas/{sala_id}")
         data = resp.json()
-        # Adicionando HATEOAS
+
         data["_links"] = {
             "entrar_sala": f"/salas/{sala_id}/entrar",
             "jogar": f"/salas/{sala_id}/jogar"
@@ -97,9 +96,7 @@ def consultar_sala(sala_id):
     except requests.exceptions.RequestException as e:
         return jsonify({"erro": str(e)}), 500
 
-# -----------------------------
-# Rodar Gateway
-# -----------------------------
+
 if __name__ == "__main__":
     print("Gateway rodando na porta 8000...")
     app.run(host="0.0.0.0", port=8000)
