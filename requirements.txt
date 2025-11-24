@@ -1,6 +1,0 @@
-django
-djangorestframework
-djangorestframework-jwt
-requests
-drf-yasg
-django-cors-headers
