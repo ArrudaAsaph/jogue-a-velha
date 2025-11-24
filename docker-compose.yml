@@ -12,8 +12,8 @@ services:
   soap-api:
     build:
       context: ./soap
-      dockerfile: Dockerfile
-    container_name: soap_api
+      dockerfile: dockerfile
+    container_name: soap
     ports:
       - "8001:8001"
     depends_on:
@@ -24,5 +24,33 @@ services:
     volumes:
       - ./soap:/app
 
+  rest-api:
+    build:
+      context: ./rest
+      dockerfile: dockerfile
+    container_name: rest
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./rest:/app
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: dockerfile
+    container_name: gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - soap-api
+      - rest-api
+    volumes:
+      - ./gateway:/app
+
 volumes:
-  redis-data:
+  redis-data
