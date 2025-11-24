@@ -108,33 +108,6 @@ O ambiente possui dois serviços:
 
 ---
 
-## ▶️ Como executar
-
-Na raiz do projeto (onde está o docker-compose.yml):
-```bash
-docker-compose up --build
-```
-A API ficará disponível em:
-
-```bash
-http://localhost:8001
-```
-
-E o Redis interno em:
-
-```bash
-docker exec -it redis_jogo redis-cli
-```
-
----
-## 📡 Endpoint SOAP
-
-URL do endpoint:
-
-http://localhost:8001/
-
----
-
 ## 🧪 Exemplo de requisição SOAP (criar sala)
 
 Request
