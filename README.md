@@ -30,14 +30,17 @@ Acesse: http://localhost:4200
 |-----------|-----------|
 | [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) | 📡 Documentação completa da API Gateway |
 | [WSDL_ANALYSIS.md](./WSDL_ANALYSIS.md) | 📄 Análise detalhada do WSDL gerado |
+| [Swagger UI](http://localhost:8000/apidocs/) | 🔗 Documentação interativa da API (Swagger) |
 
 ## ✅ Verificação dos Serviços
 
 Os serviços estão funcionando corretamente:
+
 - ✅ SOAP API - Criação de salas funcionando
 - ✅ REST API - Entrada em sala e jogadas funcionando
 - ✅ Gateway - HATEOAS implementado com sucesso
 - ✅ Frontend - Interface completa e responsiva
+- ✅ Swagger - Documentação interativa disponível
 
 ## 🎯 Funcionalidades
 

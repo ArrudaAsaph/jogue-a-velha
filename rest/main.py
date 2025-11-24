@@ -1,8 +1,37 @@
 from flask import Flask, request, jsonify
+from flasgger import Swagger
 import redis
 import json
 
 app = Flask(__name__)
+
+# Configuração do Swagger
+swagger_config = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": 'apispec',
+            "route": '/apispec.json',
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/apidocs/"
+}
+
+swagger_template = {
+    "swagger": "2.0",
+    "info": {
+        "title": "Jogo da Velha - REST API",
+        "description": "API REST para gerenciar jogadas e estado das salas",
+        "version": "1.0.0"
+    },
+    "host": "localhost:5000",
+    "basePath": "/",
+    "schemes": ["http"],
+}
+
+Swagger(app, config=swagger_config, template=swagger_template)
 
 r = redis.Redis(host="redis_jogo", port=6379, decode_responses=True)
 
