@@ -28,11 +28,8 @@ Acesse: http://localhost:4200
 
 | Documento | Descrição |
 |-----------|-----------|
-| [REQUISITOS.md](./REQUISITOS.md) | ✅ Verificação de todos os requisitos do projeto |
 | [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) | 📡 Documentação completa da API Gateway |
 | [WSDL_ANALYSIS.md](./WSDL_ANALYSIS.md) | 📄 Análise detalhada do WSDL gerado |
-| [VERIFICACAO.md](./VERIFICACAO.md) | 🔍 Resumo de implementação e testes |
-| [frontend/FRONTEND.md](./frontend/FRONTEND.md) | 🎨 Documentação do cliente web |
 
 ## ✅ Verificação dos Serviços
 
