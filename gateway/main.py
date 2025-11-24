@@ -1,8 +1,10 @@
 # gateway/main.py
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
+CORS(app)  # Habilita CORS para todas as rotas
 
 REST_API_URL = "http://rest-api:5000"
 SOAP_API_URL = "http://soap-api:8001"
@@ -90,7 +92,23 @@ def consultar_sala(sala_id):
 
         data["_links"] = {
             "entrar_sala": f"/salas/{sala_id}/entrar",
-            "jogar": f"/salas/{sala_id}/jogar"
+            "jogar": f"/salas/{sala_id}/jogar",
+            "reiniciar": f"/salas/{sala_id}/reiniciar"
+        }
+        return jsonify(data), resp.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({"erro": str(e)}), 500
+
+@app.route("/salas/<sala_id>/reiniciar", methods=["POST"])
+def reiniciar_sala(sala_id):
+    """Reinicia o jogo mantendo os mesmos jogadores"""
+    try:
+        resp = requests.post(f"{REST_API_URL}/salas/{sala_id}/reiniciar")
+        data = resp.json()
+
+        data["_links"] = {
+            "jogar": f"/salas/{sala_id}/jogar",
+            "consultar_sala": f"/salas/{sala_id}"
         }
         return jsonify(data), resp.status_code
     except requests.exceptions.RequestException as e:

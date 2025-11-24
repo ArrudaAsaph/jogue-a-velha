@@ -18,13 +18,13 @@ def salvar_sala(sala):
 
 def verificar_vitoria(tab):
     combinacoes = [
-        [0,1,2], [3,4,5], [6,7,8],        
-        [0,3,6], [1,4,7], [2,5,8],        
-        [0,4,8], [2,4,6]                  
+        [0,1,2], [3,4,5], [6,7,8],
+        [0,3,6], [1,4,7], [2,5,8],
+        [0,4,8], [2,4,6]
     ]
     for a,b,c in combinacoes:
         if tab[a] != "" and tab[a] == tab[b] == tab[c]:
-            return tab[a]  
+            return tab[a]
     return None
 
 
@@ -109,6 +109,25 @@ def consultar_sala(sala_id):
     if not sala:
         return jsonify({"erro": "Sala não encontrada"}), 404
     return jsonify(sala)
+
+@app.route("/salas/<sala_id>/reiniciar", methods=["POST"])
+def reiniciar_sala(sala_id):
+    sala = carregar_sala(sala_id)
+    if not sala:
+        return jsonify({"erro": "Sala não encontrada"}), 404
+
+    # Reiniciar o tabuleiro mantendo os jogadores
+    sala["tabuleiro"] = ["", "", "", "", "", "", "", "", ""]
+    sala["vez"] = "X"
+
+    # Remover flags de fim de jogo
+    if "vencedor" in sala:
+        del sala["vencedor"]
+    if "empate" in sala:
+        del sala["empate"]
+
+    salvar_sala(sala)
+    return jsonify({"msg": "Jogo reiniciado!", "sala": sala})
 
 @app.route("/")
 def index():
