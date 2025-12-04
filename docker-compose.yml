@@ -52,5 +52,20 @@ services:
     volumes:
       - ./gateway:/app
 
+  websocket:                  
+    build:
+      context: ./websocket
+      dockerfile: Dockerfile
+    container_name: websocket
+    ports:
+      - "8002:8002"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./websocket:/app
+
 volumes:
   redis-data: {}
