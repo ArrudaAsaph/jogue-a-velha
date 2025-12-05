@@ -32,8 +32,12 @@ class JogoDaVelhaService(ServiceBase):
             raise Fault(faultcode="Client.PortOutOfRange",
                         faultstring="A porta deve estar entre 1 e 65535.")
 
-        # Criar ID da sala
-        sala_id = str(uuid.uuid4())
+        try:
+            sala_numero = redis.incr("contador_salas")
+            sala_id = f"sala{sala_numero}"
+        except Exception as e:
+            raise Fault(faultcode="Server.RedisError",
+                        faultstring=f"Erro ao gerar ID da sala: {str(e)}")
 
         ip_local = "127.0.0.1"
 
@@ -48,10 +52,10 @@ class JogoDaVelhaService(ServiceBase):
 
  
         try:
-            redis.set(f"sala:{sala_id}", json.dumps(sala))
+            redis.set(sala_id, json.dumps(sala))
 
 
-            check = redis.get(f"sala:{sala_id}")
+            check = redis.get(sala_id)
             if check is None:
                 raise Exception("Falha ao gravar no Redis")
 

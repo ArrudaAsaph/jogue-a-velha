@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { MessageModule } from 'primeng/message';
@@ -13,6 +14,7 @@ import { interval, Subscription } from 'rxjs';
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     ButtonModule,
     CardModule,
     MessageModule,
@@ -162,6 +164,32 @@ import { interval, Subscription } from 'rxjs';
             </div>
           </div>
         }
+
+        <!-- Chat -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mt-6">
+          <h3 class="text-lg font-bold mb-4">Chat da Sala</h3>
+          <div class="space-y-2 max-h-60 overflow-y-auto border rounded p-3 bg-gray-50">
+            @for (msg of gameService.chatMessages(); track $index) {
+              <div class="text-sm">
+                <span class="font-semibold">{{ msg.sender }}</span>:
+                <span>{{ msg.message }}</span>
+                <span class="text-gray-400 text-xs"> — {{ formatTime(msg.timestamp) }}</span>
+              </div>
+            }
+            @if (!gameService.chatMessages().length) {
+              <div class="text-gray-500 text-sm">Nenhuma mensagem ainda.</div>
+            }
+          </div>
+          <div class="flex gap-2 mt-3">
+            <input
+              type="text"
+              [(ngModel)]="chatInput"
+              placeholder="Digite sua mensagem"
+              class="flex-1 px-3 py-2 border rounded"
+            />
+            <button pButton label="Enviar" icon="pi pi-send" (click)="sendChat()" [disabled]="!canSendChat()"></button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -181,6 +209,7 @@ export class GameComponent implements OnInit, OnDestroy {
   errorMessage = signal<string>('');
   showError = false;
   private pollSubscription?: Subscription;
+  chatInput = '';
 
   constructor(
     public gameService: GameService,
@@ -194,11 +223,12 @@ export class GameComponent implements OnInit, OnDestroy {
     }
 
     this.loadGameState();
-    this.startPolling();
+    this.gameService.connectToRoom(this.gameService.currentRoom() as string);
   }
 
   ngOnDestroy() {
     this.stopPolling();
+    this.gameService.disconnectFromRoom();
   }
 
   loadGameState() {
@@ -283,6 +313,26 @@ export class GameComponent implements OnInit, OnDestroy {
     const roomId = this.gameService.currentRoom();
     if (roomId) {
       navigator.clipboard.writeText(roomId);
+    }
+  }
+
+  canSendChat(): boolean {
+    return !!this.chatInput.trim() && !!this.gameService.currentPlayer();
+  }
+
+  sendChat() {
+    const sender = this.gameService.currentPlayer();
+    if (!sender || !this.chatInput.trim()) return;
+    this.gameService.sendChat(sender, this.chatInput.trim());
+    this.chatInput = '';
+  }
+
+  formatTime(ts: string): string {
+    try {
+      const d = new Date(ts);
+      return d.toLocaleTimeString();
+    } catch {
+      return ts;
     }
   }
 
