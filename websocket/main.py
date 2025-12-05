@@ -18,7 +18,7 @@ rooms: Dict[str, Set[websockets.WebSocketServerProtocol]] = {}
 
 try:
     redis_client = redis.Redis(
-        host='redis', 
+        host='redis',
         port=6379,
         decode_responses=True
     )
@@ -33,7 +33,7 @@ async def broadcast_to_room(room_id: str, message: dict):
     if room_id in rooms and rooms[room_id]:
         message_json = json.dumps(message)
         disconnected = []
-        
+
         for client in rooms[room_id]:
             try:
                 await client.send(message_json)
@@ -41,7 +41,7 @@ async def broadcast_to_room(room_id: str, message: dict):
             except Exception as e:
                 logger.error(f"Erro ao enviar: {str(e)}")
                 disconnected.append(client)
-        
+
 
         for client in disconnected:
             if room_id in rooms:
@@ -52,24 +52,24 @@ async def handler(websocket, path):
     """Manipula conexões WebSocket"""
     client_ip = websocket.remote_address[0]
     logger.info(f"🔗 Nova conexão de {client_ip}")
-    
+
     try:
 
         if not path.startswith('/ws/'):
             await websocket.close(1008, "Path inválido. Use /ws/{room_id}")
             return
-        
-        room_id = path[4:]  
-        
+
+        room_id = path[4:]
+
         if not room_id:
             await websocket.close(1008, "Room ID não especificado")
             return
-        
+
 
         if room_id not in rooms:
             rooms[room_id] = set()
         rooms[room_id].add(websocket)
-        
+
         logger.info(f"✅ Cliente conectado à sala {room_id}. Total: {len(rooms[room_id])}")
 
         await websocket.send(json.dumps({
@@ -78,7 +78,7 @@ async def handler(websocket, path):
             "message": f"Conectado à sala {room_id}",
             "timestamp": datetime.now().isoformat()
         }))
-        
+
 
         if redis_client:
             try:
@@ -92,20 +92,20 @@ async def handler(websocket, path):
                     }))
             except Exception as e:
                 logger.error(f"Erro ao buscar estado inicial: {str(e)}")
-        
+
 
         async for message in websocket:
             try:
                 data = json.loads(message)
                 action = data.get("action")
-                
+
                 if action == "ping":
 
                     await websocket.send(json.dumps({
                         "type": "pong",
                         "timestamp": datetime.now().isoformat()
                     }))
-                
+
                 elif action == "get_state":
                     # Buscar estado atual do Redis
                     if redis_client:
@@ -117,7 +117,7 @@ async def handler(websocket, path):
                                 "room": room_state,
                                 "timestamp": datetime.now().isoformat()
                             }))
-                
+
                 elif action == "chat":
                     # Broadcast de mensagem de chat
                     chat_data = {
@@ -127,12 +127,22 @@ async def handler(websocket, path):
                         "timestamp": datetime.now().isoformat()
                     }
                     await broadcast_to_room(room_id, chat_data)
-            
+                    logger.info(f"💬 Chat na sala {room_id}: {data.get('sender')}: {data.get('message')}")
+
+                elif action == "player_update":
+                    # Broadcast de atualização de jogadores/espectadores
+                    update_data = {
+                        "type": "player_update",
+                        "data": data.get("data", {}),
+                        "timestamp": datetime.now().isoformat()
+                    }
+                    await broadcast_to_room(room_id, update_data)
+
             except json.JSONDecodeError:
                 logger.warning("Mensagem JSON inválida recebida")
             except Exception as e:
                 logger.error(f"Erro ao processar mensagem: {str(e)}")
-    
+
     except websockets.exceptions.ConnectionClosed:
         logger.info(f"🔌 Conexão fechada de {client_ip}")
     except Exception as e:
@@ -150,39 +160,44 @@ async def monitor_redis_events():
     if not redis_client:
         logger.warning("Redis não disponível, monitoramento desativado")
         return
-    
-    pubsub = redis_client.pubsub()
-    
-    try:
 
-        await pubsub.subscribe('game_updates')
-        
-        logger.info("👂 Monitorando eventos do jogo no Redis...")
-        
+    pubsub = redis_client.pubsub()
+
+    try:
+        pubsub.subscribe('jogo_velha_events')
+
+        logger.info("👂 Monitorando eventos do jogo no Redis (canal: jogo_velha_events)...")
+
         while True:
-            message = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
-            
+            loop = asyncio.get_event_loop()
+            message = await loop.run_in_executor(
+                None,
+                lambda: pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+            )
+
             if message and message['type'] == 'message':
                 try:
                     event = json.loads(message['data'])
-                    room_id = event.get('room_id')
-                    event_type = event.get('event')
-                    
-                    if room_id and event_type:
-                        logger.info(f"📡 Evento: {event_type} na sala {room_id}")
-                        
+                    sala_id = event.get('sala_id')
+                    evento = event.get('evento')
+                    dados = event.get('dados', {})
+
+                    if sala_id and evento:
+                        logger.info(f"📡 Evento Redis: {evento} na sala {sala_id}")
+
                         # Broadcast para a sala
-                        await broadcast_to_room(room_id, {
-                            "type": event_type,
-                            "data": event.get('data', {}),
+                        await broadcast_to_room(sala_id, {
+                            "type": "game_event",
+                            "evento": evento,
+                            "dados": dados,
                             "timestamp": datetime.now().isoformat()
                         })
-                
+
                 except Exception as e:
-                    logger.error(f"Erro ao processar evento: {str(e)}")
-            
-            await asyncio.sleep(0.1)
-    
+                    logger.error(f"Erro ao processar evento Redis: {str(e)}")
+
+            await asyncio.sleep(0.01)  # evita sobrecarregar
+
     except Exception as e:
         logger.error(f"Erro no monitoramento Redis: {str(e)}")
 
@@ -198,7 +213,7 @@ async def main():
 
     asyncio.create_task(monitor_redis_events())
     asyncio.create_task(health_check())
-    
+
 
     server = await websockets.serve(
         handler,
@@ -207,11 +222,11 @@ async def main():
         ping_interval=20,
         ping_timeout=30
     )
-    
+
     logger.info("🚀 WebSocket Server iniciado na porta 8002")
     logger.info("📌 Endpoints disponíveis:")
     logger.info("  - ws://localhost:8002/ws/{room_id} - Conectar a uma sala")
-    
+
     await server.wait_closed()
 
 if __name__ == "__main__":

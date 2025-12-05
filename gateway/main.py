@@ -344,6 +344,90 @@ def reiniciar_sala(sala_id):
     except requests.exceptions.RequestException as e:
         return jsonify({"erro": str(e)}), 500
 
+@app.route("/salas/<sala_id>/chat", methods=["POST"])
+def enviar_chat(sala_id):
+    """
+    Enviar mensagem no chat da sala
+    ---
+    tags:
+      - Chat
+    parameters:
+      - name: sala_id
+        in: path
+        type: string
+        required: true
+        description: ID da sala
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - jogador
+            - mensagem
+          properties:
+            jogador:
+              type: string
+              description: Nome do jogador ou espectador
+            mensagem:
+              type: string
+              description: Mensagem a ser enviada
+    responses:
+      200:
+        description: Mensagem enviada com sucesso
+      400:
+        description: Jogador ou mensagem não informados
+      404:
+        description: Sala não encontrada
+    """
+    try:
+        payload = request.json
+        resp = requests.post(f"{REST_API_URL}/salas/{sala_id}/chat", json=payload)
+        data = resp.json()
+        return jsonify(data), resp.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({"erro": str(e)}), 500
+
+@app.route("/salas/<sala_id>/sair", methods=["POST"])
+def sair_sala(sala_id):
+    """
+    Sair de uma sala
+    ---
+    tags:
+      - Salas
+    parameters:
+      - name: sala_id
+        in: path
+        type: string
+        required: true
+        description: ID da sala
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required:
+            - jogador
+          properties:
+            jogador:
+              type: string
+              description: Nome do jogador ou espectador
+    responses:
+      200:
+        description: Usuário saiu da sala
+      400:
+        description: Jogador não informado
+      404:
+        description: Sala não encontrada
+    """
+    try:
+        payload = request.json
+        resp = requests.post(f"{REST_API_URL}/salas/{sala_id}/sair", json=payload)
+        data = resp.json()
+        return jsonify(data), resp.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({"erro": str(e)}), 500
+
 
 if __name__ == "__main__":
     print("Gateway rodando na porta 8000...")
