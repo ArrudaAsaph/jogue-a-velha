@@ -12,6 +12,14 @@ export interface Sala {
   nomes?: { [key: string]: string };
   vencedor?: string;
   empate?: boolean;
+  espectadores?: string[];
+}
+
+export interface ChatMessage {
+  jogador_nome: string;
+  mensagem: string;
+  tipo: 'jogador' | 'espectador';
+  timestamp: number;
 }
 
 @Injectable({
@@ -24,8 +32,10 @@ export class GameService {
   currentPlayer = signal<string | null>(null);
   currentSymbol = signal<string | null>(null);
   gameState = signal<Sala | null>(null);
+  userType = signal<'jogador' | 'espectador' | null>(null);
+  chatMessages = signal<ChatMessage[]>([]);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   createRoom(porta: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/criar-sala`, { porta });
@@ -50,17 +60,29 @@ export class GameService {
     return this.http.post(`${this.apiUrl}/salas/${roomId}/reiniciar`, {});
   }
 
+  sendChatMessage(roomId: string, playerName: string, message: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/salas/${roomId}/chat`, {
+      jogador: playerName,
+      mensagem: message
+    });
+  }
+
   setCurrentRoom(roomId: string) {
     this.currentRoom.set(roomId);
   }
 
-  setCurrentPlayer(playerName: string, symbol: string) {
+  setCurrentPlayer(playerName: string, symbol: string, userType: 'jogador' | 'espectador' = 'jogador') {
     this.currentPlayer.set(playerName);
     this.currentSymbol.set(symbol);
+    this.userType.set(userType);
   }
 
   updateGameState(state: Sala) {
     this.gameState.set(state);
+  }
+
+  addChatMessage(message: ChatMessage) {
+    this.chatMessages.update(messages => [...messages, message]);
   }
 
   resetGame() {
@@ -68,5 +90,7 @@ export class GameService {
     this.currentPlayer.set(null);
     this.currentSymbol.set(null);
     this.gameState.set(null);
+    this.userType.set(null);
+    this.chatMessages.set([]);
   }
 }
