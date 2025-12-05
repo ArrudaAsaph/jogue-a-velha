@@ -132,7 +132,7 @@ export class HomeComponent {
   constructor(
     private gameService: GameService,
     private router: Router
-  ) {}
+  ) { }
 
   createRoom() {
     this.createError.set(null);
@@ -146,8 +146,9 @@ export class HomeComponent {
         // Join the room automatically
         this.gameService.joinRoom(roomId, this.createName).subscribe({
           next: (joinResponse) => {
-            const symbol = joinResponse.sala.jogadores[0];
-            this.gameService.setCurrentPlayer(this.createName, symbol);
+            const userType = joinResponse.tipo || 'jogador';
+            const symbol = joinResponse.seu_simbolo || joinResponse.sala.jogadores[0];
+            this.gameService.setCurrentPlayer(this.createName, symbol, userType);
             this.gameService.updateGameState(joinResponse.sala);
             this.isCreating.set(false);
             this.router.navigate(['/game']);
@@ -171,9 +172,10 @@ export class HomeComponent {
 
     this.gameService.joinRoom(this.roomId, this.joinName).subscribe({
       next: (response) => {
-        const symbol = response.sala.jogadores[response.sala.jogadores.length - 1];
+        const userType = response.tipo || 'jogador';
+        const symbol = response.seu_simbolo || (response.tipo === 'espectador' ? '' : response.sala.jogadores[response.sala.jogadores.length - 1]);
         this.gameService.setCurrentRoom(this.roomId);
-        this.gameService.setCurrentPlayer(this.joinName, symbol);
+        this.gameService.setCurrentPlayer(this.joinName, symbol, userType);
         this.gameService.updateGameState(response.sala);
         this.isJoining.set(false);
         this.router.navigate(['/game']);

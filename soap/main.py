@@ -3,7 +3,6 @@ import redis
 from spyne import Application, rpc, ServiceBase, Unicode, Fault
 from spyne.protocol.soap import Soap11
 from spyne.server.wsgi import WsgiApplication
-import uuid
 
 try:
     redis = redis.Redis(host='redis_jogo', port=6379, decode_responses=True)
@@ -17,27 +16,35 @@ class JogoDaVelhaService(ServiceBase):
 
     @rpc(Unicode, _returns=Unicode)
     def criarSala(ctx, porta):
-       
+
         if porta is None or porta.strip() == "":
-            raise Fault(faultcode="Client.PortMissing",
-                        faultstring="O campo 'porta' é obrigatório.")
+            raise Fault(
+                faultcode="Client.PortMissing",
+                faultstring="O campo 'porta' é obrigatório."
+            )
 
         if not porta.isdigit():
-            raise Fault(faultcode="Client.PortInvalid",
-                        faultstring="A porta deve ser um número inteiro.")
+            raise Fault(
+                faultcode="Client.PortInvalid",
+                faultstring="A porta deve ser um número inteiro."
+            )
 
         porta_int = int(porta)
 
         if porta_int < 1 or porta_int > 65535:
-            raise Fault(faultcode="Client.PortOutOfRange",
-                        faultstring="A porta deve estar entre 1 e 65535.")
+            raise Fault(
+                faultcode="Client.PortOutOfRange",
+                faultstring="A porta deve estar entre 1 e 65535."
+            )
 
         try:
             sala_numero = redis.incr("contador_salas")
             sala_id = f"sala{sala_numero}"
         except Exception as e:
-            raise Fault(faultcode="Server.RedisError",
-                        faultstring=f"Erro ao gerar ID da sala: {str(e)}")
+            raise Fault(
+                faultcode="Server.RedisError",
+                faultstring=f"Erro ao gerar ID da sala: {str(e)}"
+            )
 
         ip_local = "127.0.0.1"
 
@@ -50,22 +57,20 @@ class JogoDaVelhaService(ServiceBase):
             "vez": "X"
         }
 
- 
         try:
-            redis.set(sala_id, json.dumps(sala))
+            redis.set(f"sala:{sala_id}", json.dumps(sala))
 
-
-            check = redis.get(sala_id)
+            check = redis.get(f"sala:{sala_id}")
             if check is None:
                 raise Exception("Falha ao gravar no Redis")
 
         except Exception as e:
-            raise Fault(faultcode="Server.RedisError",
-                        faultstring=f"Erro ao salvar sala no Redis: {str(e)}")
+            raise Fault(
+                faultcode="Server.RedisError",
+                faultstring=f"Erro ao salvar sala no Redis: {str(e)}"
+            )
 
         return sala_id
-
-
 
 
 # Configuração SOAP
